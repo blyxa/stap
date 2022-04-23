@@ -1,0 +1,9 @@
+{"namespace": "com.blyxa.stap",
+  "type": "record",
+  "name": "Bicycle",
+  "fields": [
+    {"name": "name", "type": "string"},
+    {"name": "year",  "type": ["int", "null"]},
+    {"name": "color", "type": ["string", "null"]}
+  ]
+}

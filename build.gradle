@@ -1,0 +1,38 @@
+plugins {
+  id 'scala'
+  id 'application'
+}
+
+group 'com.blyxa.stap'
+version '0.0.1'
+
+repositories {
+  mavenCentral()
+}
+def scalaTarget = '2.13'
+def scalaVersion = "2.13.8"
+dependencies {
+  implementation "org.scala-lang:scala-library:$scalaVersion"
+  implementation "com.github.pureconfig:pureconfig_$scalaTarget:0.17.1"
+  implementation "org.apache.kafka:kafka_$scalaTarget:3.1.0"
+  implementation "org.apache.kafka:kafka-clients:3.1.0"
+  implementation "org.slf4j:slf4j-api:1.7.36"
+  implementation "ch.qos.logback:logback-classic:1.2.11"
+  implementation "org.fusesource.jansi:jansi:2.4.0"
+  implementation "org.apache.avro:avro:1.11.0"
+  implementation "org.jline:jline:3.21.0"
+  implementation "com.fasterxml.jackson.core:jackson-core:2.13.2"
+}
+application {
+  mainClass = "com.blyxa.stap.Main"
+}
+jar {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  manifest.attributes([
+    "Main-Class":"com.blyxa.stap.Main"
+  ])
+  from {
+    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+}
+
