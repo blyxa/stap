@@ -98,7 +98,7 @@ case class KafkaFunctions
     val topicDescriptions = adminClient.describeTopics(topicNames.asJava)
       .allTopicNames().get().asScala.toMap
     val configs = getTopicConfigs(topicNames.toSet)
-    val nodes: mutable.Map[Integer, mutable.Map[String, LogDirDescription]] = clusterBrokers
+    val nodes: mutable.Map[Integer, mutable.Map[String, LogDirDescription]] = clusterBrokers()
 
     val replicaInfos = nodes.values.flatMap(_.values.flatMap(_.replicaInfos().asScala)).groupBy(_._1.topic())
       .map{ case (topic, replicaInfos) =>
