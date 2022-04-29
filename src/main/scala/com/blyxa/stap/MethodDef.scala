@@ -1,5 +1,7 @@
 package com.blyxa.stap
 
+import de.vandermeer.asciitable.AsciiTable
+import de.vandermeer.asciithemes.a8.A8_Grids
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig}
 
 import java.util.Properties

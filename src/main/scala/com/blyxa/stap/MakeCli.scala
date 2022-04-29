@@ -19,8 +19,8 @@ object MakeCli{
   // Ansi color init
   AnsiConsole.systemInstall()
 
-  // width of console header
-  final val HEADER_PADDING = TerminalBuilder.terminal().getWidth
+  final val TERMINAL_WIDTH = TerminalBuilder.terminal().getWidth
+  final val HEADER_PADDING = TERMINAL_WIDTH
 
   private lazy val logger = LoggerFactory.getLogger(getClass)
 
@@ -39,13 +39,11 @@ object MakeCli{
       // Check arguments for help
       val argsFiltered = args.filter(!_.startsWith("-v"))
       if(argsFiltered.isEmpty || argsFiltered.contains("-h") || argsFiltered.length<2){
-        val desc = methods.values.toList.sortBy(_.name).map{m=>
-          s"${m.signature}" + (if(m.description.nonEmpty)m.description.replaceAll("\n","\n    ") else "")
+        val table = Main.newTable(Array("method","Params","Description"))
+        methods.values.toList.sortBy(_.name).map{m=>
+          table.addRow(m.name, m.params.mkString("<br>"), m.description)
         }
-        println(
-          s"""${header("Available methods")}
-             |${desc.mkString("\n")}
-             |""".stripMargin)
+        println(table.render())
       }
       else{
         // Start processing method request

@@ -16,6 +16,7 @@ dependencies {
   implementation "com.github.pureconfig:pureconfig_$scalaTarget:0.17.1"
   implementation "org.apache.kafka:kafka_$scalaTarget:3.1.0"
   implementation "org.apache.kafka:kafka-clients:3.1.0"
+  implementation "de.vandermeer:asciitable:0.3.2"
   implementation "org.slf4j:slf4j-api:1.7.36"
   implementation "ch.qos.logback:logback-classic:1.2.11"
   implementation "org.fusesource.jansi:jansi:2.4.0"

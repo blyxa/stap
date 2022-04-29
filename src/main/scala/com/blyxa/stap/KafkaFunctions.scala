@@ -18,8 +18,7 @@ import java.util.Properties
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
-case class KafkaFunctions
-()
+case class KafkaFunctions()
 (implicit
  val adminClient: AdminClient,
  val conf:Kafka)
@@ -27,19 +26,16 @@ case class KafkaFunctions
   private val logger = LoggerFactory.getLogger(getClass)
   def consumer(): KafkaConsumer[Array[Byte],Array[Byte]] ={
     val config = new Properties()
-    //config.put("client.id", InetAddress.getLocalHost().getHostName())
     config.put("group.id", "stap")
     config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, conf.brokers)
     new KafkaConsumer(config, new ByteArrayDeserializer, new ByteArrayDeserializer)
   }
   def producer(): KafkaProducer[Array[Byte],Array[Byte]] ={
     val config = new Properties()
-    //config.put("client.id", InetAddress.getLocalHost().getHostName())
     config.put("group.id", "stap")
     config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, conf.brokers)
     new KafkaProducer(config, new ByteArraySerializer, new ByteArraySerializer)
   }
-
   def read(topicName:String, callback:ConsumerRecord[Array[Byte],Array[Byte]]=>Unit):Unit={
     val c= consumer()
     val topicPartitions = describeTopics(List(topicName))(topicName)._1.partitions().asScala.map(tpi=> new TopicPartition(topicName,tpi.partition())).asJava
@@ -51,7 +47,6 @@ case class KafkaFunctions
       }
     }
   }
-
   def readAvro(topicName:String, schemaFilePath:String, callback: AvroRecord =>Unit): Unit ={
     val reader = AvroDecoder(new Schema.Parser().parse(new File(schemaFilePath)))
     val c= consumer()
@@ -85,8 +80,9 @@ case class KafkaFunctions
     producer().send(r).get()
   }
   def createTopic(req:CreateTopic): (TopicDescription, Config, Iterable[ReplicaInfo]) ={
+    val t= new NewTopic(req.name, req.partitions, req.replicationFactor)
     adminClient.createTopics(
-      Seq(new NewTopic(req.name, req.partitions, req.replicationFactor)).asJava
+      Seq(t.configs(req.configs.asJava)).asJava
     ).all().get()
     describeTopics(List(req.name))(req.name)
   }
