@@ -39,6 +39,23 @@ object MakeCli{
       // Check arguments for help
       val argsFiltered = args.filter(!_.startsWith("-v"))
       if(argsFiltered.isEmpty || argsFiltered.contains("-h") || argsFiltered.length<2){
+        println(
+          s"""${ansi().fgBrightGreen()}
+             |  ███████╗████████╗ █████╗ ██████╗
+             |  ██╔════╝╚══██╔══╝██╔══██╗██╔══██╗
+             |  ███████╗   ██║   ███████║██████╔╝
+             |  ╚════██║   ██║   ██╔══██║██╔═══╝
+             |  ███████║   ██║   ██║  ██║██║
+             |  ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝
+             |  (Stream Tap) Kafka cli tool${ansi().reset()}
+             |
+             |  java -jar stap.jar <kafka name in stap.conf> <method> <param1> <param2> ...
+             |
+             |  Example,
+             |  java -jar stap.jar localhost describeTopic mytopicname
+             |  java -jar stap.jar myprdkafka readAvro myavrotopic myavroschema.json
+             |
+             |""".stripMargin)
         val table = Main.newTable(Array("method","Params","Description"))
         methods.values.toList.sortBy(_.name).map{m=>
           table.addRow(m.name, m.params.mkString("<br>"), m.description)

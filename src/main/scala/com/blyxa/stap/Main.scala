@@ -1,7 +1,6 @@
 package com.blyxa.stap
 
 import de.vandermeer.asciitable.AsciiTable
-import de.vandermeer.asciithemes.a8.A8_Grids
 import de.vandermeer.skb.interfaces.transformers.textformat.TextAlignment
 import org.apache.avro.Schema
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
@@ -147,16 +146,16 @@ object Main {
 
   def newTable(hCols:Array[String]): AsciiTable ={
     val table = new AsciiTableWrapper()
-    table.getContext.setGrid(A8_Grids.lineDoubleBlocks())
-    table.addHeavyRule()
+    table.addRule()
     table.addRow(hCols:_*)
-    table.addLightRule()
+    table.addRule()
     table
   }
 }
 class AsciiTableWrapper extends AsciiTable{
   override def render(): String ={
     setTextAlignment(TextAlignment.LEFT)
+    addRule()
     super.render()
   }
 }
