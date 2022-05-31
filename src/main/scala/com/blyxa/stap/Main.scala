@@ -146,6 +146,7 @@ object Main {
 
   def newTable(hCols:Array[String]): AsciiTable ={
     val table = new AsciiTableWrapper()
+    table.getContext.setWidth(MakeCli.TERMINAL_WIDTH)
     table.addRule()
     table.addRow(hCols:_*)
     table.addRule()
