@@ -1,5 +1,6 @@
 package com.blyxa.stap
 
+import com.blyxa.stap.models.Topic
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericDatumReader, GenericDatumWriter}
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
@@ -36,31 +37,47 @@ case class KafkaFunctions()
     config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, conf.brokers)
     new KafkaProducer(config, new ByteArraySerializer, new ByteArraySerializer)
   }
-  def read(topicName:String, callback:ConsumerRecord[Array[Byte],Array[Byte]]=>Unit):Unit={
-    val c= consumer()
-    val topicPartitions = describeTopics(List(topicName))(topicName)._1.partitions().asScala.map(tpi=> new TopicPartition(topicName,tpi.partition())).asJava
-    c.assign(topicPartitions)
-    c.seekToBeginning(topicPartitions)
-    while(true){
-      c.poll(Duration.ofSeconds(5)).asScala.foreach{r=>
-        callback(r)
-      }
+  def read(topicName:String, startFromLatest:Boolean = true, callback:ConsumerRecord[Array[Byte],Array[Byte]]=>Unit):Unit={
+    val c = consumer()
+    describeTopics(List(topicName)).get(topicName) match {
+      case Some(topic) =>
+        val topicPartitions = topic.description.partitions().asScala.map(tpi=> new TopicPartition(topicName,tpi.partition())).asJava
+        c.assign(topicPartitions)
+        if(startFromLatest) c.seekToEnd(topicPartitions)
+        else c.seekToBeginning(topicPartitions)
+        while(true){
+          c.poll(Duration.ofSeconds(5)).asScala.foreach{r=>
+            callback(r)
+          }
+        }
+      case None => throw new Throwable(s"topic[$topicName] not found")
     }
   }
-  def readAvro(topicName:String, schemaFilePath:String, callback: AvroRecord =>Unit): Unit ={
-    val reader = AvroDecoder(new Schema.Parser().parse(new File(schemaFilePath)))
+  def readAvro(topicName:String, schemaFilePath:File, startFromLatest:Boolean = true, callback: AvroRecord =>Unit): Unit ={
+    val reader = AvroDecoder(new Schema.Parser().parse(schemaFilePath))
     val c= consumer()
-    val topicPartitions = describeTopics(List(topicName))(topicName)._1.partitions().asScala.map(tpi=> new TopicPartition(topicName,tpi.partition())).asJava
-    c.assign(topicPartitions)
-    c.seekToBeginning(topicPartitions)
-    while(true){
-      c.poll(Duration.ofSeconds(5)).asScala.foreach{r=>
-        callback(reader.deserialize(r))
-      }
+    describeTopics(List(topicName)).get(topicName) match {
+      case Some(topic) =>
+        val topicPartitions = topic.description.partitions().asScala.map(tpi=> new TopicPartition(topicName,tpi.partition())).asJava
+        c.assign(topicPartitions)
+        if(startFromLatest) c.seekToEnd(topicPartitions)
+        else c.seekToBeginning(topicPartitions)
+
+        while(true){
+          c.poll(Duration.ofSeconds(5)).asScala.foreach{r=>
+            callback(reader.deserialize(r))
+          }
+        }
+      case None => throw new Throwable(s"topic[$topicName] not found")
     }
   }
-  def writeAvro(topicName:String, schemaFilePath:String, key:String, recordJson:String): RecordMetadata ={
-    val schema = new Schema.Parser().parse(new File(schemaFilePath))
+  def writeString(topicName:String, key:String, record:String): RecordMetadata ={
+    val r = new ProducerRecord[Array[Byte],Array[Byte]](topicName, key.getBytes, record.getBytes)
+    producer().send(r).get()
+  }
+
+  def writeAvro(topicName:String, schemaFilePath:File, key:String, recordJson:String): RecordMetadata ={
+    val schema = new Schema.Parser().parse(schemaFilePath)
 
     // decode json to generic data record
     val decoder = DecoderFactory.get().jsonDecoder(schema, recordJson)
@@ -79,7 +96,7 @@ case class KafkaFunctions()
     val r = new ProducerRecord[Array[Byte],Array[Byte]](topicName, key.getBytes, byteArrayOutputStream.toByteArray)
     producer().send(r).get()
   }
-  def createTopic(req:CreateTopic): (TopicDescription, Config, Iterable[ReplicaInfo]) ={
+  def createTopic(req:CreateTopic): Topic ={
     val t= new NewTopic(req.name, req.partitions, req.replicationFactor)
     adminClient.createTopics(
       Seq(t.configs(req.configs.asJava)).asJava
@@ -89,7 +106,7 @@ case class KafkaFunctions()
   def listAllTopicNames(): Set[String] ={
     adminClient.listTopics().names().get().asScala.toSet
   }
-  def describeTopics(topics:List[String]=List()): Map[String,(TopicDescription,Config, Iterable[ReplicaInfo])] = {
+  def describeTopics(topics:List[String]=List()): Map[String,Topic] = {
     val topicNames = if(topics.nonEmpty) topics else listAllTopicNames() .toList
     val topicDescriptions = adminClient.describeTopics(topicNames.asJava)
       .allTopicNames().get().asScala.toMap
@@ -101,7 +118,8 @@ case class KafkaFunctions()
         topic -> replicaInfos.map(_._2)
       }
 
-    topicDescriptions.map{ case (t, d) => t->(d, configs(t), replicaInfos(t))}
+    topicDescriptions.map{ case (t, d) =>
+      t -> Topic(t, d, configs(t), replicaInfos(t))}
   }
   def deleteTopic(name:String): Unit ={
     adminClient.deleteTopics(Set(name).asJava).all().get()
@@ -127,7 +145,7 @@ case class KafkaFunctions()
     adminClient.describeConfigs(topicNames.map(new ConfigResource(Type.TOPIC, _)).asJavaCollection)
       .all().get().asScala.toMap.map{ case (resource, config) => resource.name()->config}
   }
-  def listAllTopics():Map[String,(TopicDescription,Config, Iterable[ReplicaInfo])] = describeTopics()
+  def listAllTopics():Map[String,Topic] = describeTopics()
 
   def groupConsumerOffsets(groupId:String): Map[TopicPartition, OffsetAndMetadata] ={
     adminClient.listConsumerGroupOffsets(

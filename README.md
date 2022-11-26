@@ -29,13 +29,21 @@ cd stap
 # add kafka cluster configuration in stap.conf else use the predefined localhost.
 vi stap.conf
 
-# show available methods
-java -jar build/libs/stap-<version>.jar 
+# show available commands
+./stap --help
 
 # list topics
-java -jar build/libs/stap-<version>.jar localhost listTopics
+./stap topics -t localhost
 
-# see more log
-java -jar build/libs/stap-<version>.jar localhost listGroups -vvv
+# create topic
+./stap createTopic -t localhost -n myavrotopic -p 2 -r 1 --configs retention.ms=40000,retention.bytes=30000
 
+# write avro record
+./stap writeAvro --target localhost -n myavrotopic -s example.avro.json -k mykey -v '{ "name" : "myname", "year":{"int": 1991}, "color":null }'
+
+# read avro topic (default read starting from latest. this example start from oldest)
+./stap readAvro --target localhost -n myavrotopic -s example.avro.json -p false
+
+# delete topic
+./stap deleteTopic --target localhost -n myavrotopic
 ```

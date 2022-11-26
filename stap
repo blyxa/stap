@@ -1,0 +1,4 @@
+#!/bin/sh
+
+version=$(cat version.txt)
+exec java -jar build/libs/stap-$version.jar "$@"
