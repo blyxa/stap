@@ -1,6 +1,6 @@
 # Stream Tap `stap`
 
-is a command line tool for reading data from kafka. It supports the following serializers...
+is a command line tool for (among other functions) reading/writing data from kafka. It supports the following serializers...
 * Avro
 * String
 
