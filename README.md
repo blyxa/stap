@@ -1,4 +1,4 @@
-# Stream Tap `stap`
+# STAP (Stream Tap)
 
 is a command line tool for (among other functions) reading/writing data from kafka. It supports the following serializers...
 * Avro
