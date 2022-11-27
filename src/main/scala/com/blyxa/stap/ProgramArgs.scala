@@ -20,6 +20,9 @@ case class ProgramArgs
   key:Option[String] =None,
   value:Option[String] =None,
   startFromLatest:Boolean = true,
+  recordGenIntervalMs:Int = 1000,
+  recordGenCount:Int = 10,
+  pythonFile:Option[File]=None,
   verbose:Int = 0
 )
 
@@ -161,6 +164,25 @@ object ProgramArgs {
               .valueName("k1=v1,k2=v2...")
               .action((x, c) => c.copy(configs = x))
               .text("additional name/value configurations. retention.ms=60000,retention.bytes=64000 "),
+          ),
+        note(""),
+
+        /*
+        genAvro
+         */
+        cmd("genAvro")
+          .action((_, c) => c.copy(cmd = "genAvro"))
+          .text("generate avro records topic")
+          .children(
+            target,
+            topic,
+            schema,
+            opt[Int]('i',"intervalMs")
+              .action((x, c) => c.copy(recordGenIntervalMs = x))
+              .text("interval between record generation. default 1000."),
+            opt[Int]('n',"number")
+              .action((x, c) => c.copy(recordGenCount = x))
+              .text("number of records to generate. -1 forever. default 10.")
           ),
         note(""),
       )

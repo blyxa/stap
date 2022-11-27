@@ -23,6 +23,7 @@ dependencies {
   implementation 'ch.qos.logback:logback-classic:1.4.5'
   implementation "org.fusesource.jansi:jansi:2.4.0"
   implementation "org.apache.avro:avro:1.11.0"
+  implementation 'org.python:jython-standalone:2.7.3'
   implementation "org.jline:jline:3.21.0"
   implementation 'com.fasterxml.jackson.core:jackson-core:2.14.0'
 }

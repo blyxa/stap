@@ -5,3 +5,5 @@ build
 artifacts
 out
 *.tmp.txt
+*.class
+.jython_cache

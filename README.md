@@ -39,11 +39,20 @@ vi stap.conf
 ./stap createTopic -t localhost -n myavrotopic -p 2 -r 1 --configs retention.ms=40000,retention.bytes=30000
 
 # write avro record
-./stap writeAvro --target localhost -n myavrotopic -s example.avro.json -k mykey -v '{ "name" : "myname", "year":{"int": 1991}, "color":null }'
+./stap writeAvro -t localhost -n myavrotopic -s example.avro.json -k mykey -v '{ "name" : "myname", "year":{"int": 1991}, "color":null }'
 
 # read avro topic (default read starting from latest. this example start from oldest)
-./stap readAvro --target localhost -n myavrotopic -s example.avro.json -p false
+./stap readAvro -t localhost -n myavrotopic -s example.avro.json -p false
 
 # delete topic
-./stap deleteTopic --target localhost -n myavrotopic
+./stap deleteTopic -t localhost -n myavrotopic
 ```
+
+# Data Generation Feature
+There are times when you need to generate test data into a kafka topic. STAP allows users to generate test data using python. Python is used only for the generation of the test data (as json string). STAP will initialize the kafka producer and call the python script to generate the test data and then write to the topic.
+* example.avro.json represents the Avro schema we will use
+* generator/python/generator.py contains code that will be called by STAP to generate the test data (json string)
+* `./stap genAvro -t localhost -n myavrotopic -s example.avro.json` is the command for starting the process
+
+
+

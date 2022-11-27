@@ -77,23 +77,13 @@ case class KafkaFunctions()
   }
 
   def writeAvro(topicName:String, schemaFilePath:File, key:String, recordJson:String): RecordMetadata ={
-    val schema = new Schema.Parser().parse(schemaFilePath)
+    val avroUtil = AvroUtil(schemaFilePath)
+    val record = avroUtil.jsonToGeneric(recordJson)
+    val bytes = avroUtil.genericDataToBytes(record)
 
-    // decode json to generic data record
-    val decoder = DecoderFactory.get().jsonDecoder(schema, recordJson)
-    val reader:GenericDatumReader[GenericData.Record] = new GenericDatumReader(schema)
-    val record = reader.read(null, decoder)
-
-    // serialize record to byte array
-    val byteArrayOutputStream = new ByteArrayOutputStream
-    val binaryEncoder = EncoderFactory.get.binaryEncoder(byteArrayOutputStream, null)
-    val datumWriter = new GenericDatumWriter[GenericData.Record](schema)
-    logger.info(s"writing record [$record]")
-    datumWriter.write(record, binaryEncoder)
-    binaryEncoder.flush()
     // create kafka producer record and send
-    logger.info(s"writing key.size[${key.getBytes.length}] value.size[${byteArrayOutputStream.toByteArray.length}]")
-    val r = new ProducerRecord[Array[Byte],Array[Byte]](topicName, key.getBytes, byteArrayOutputStream.toByteArray)
+    logger.info(s"writing key.size[${key.getBytes.length}] value.size[${bytes.length}]")
+    val r = new ProducerRecord[Array[Byte],Array[Byte]](topicName, key.getBytes, bytes)
     producer().send(r).get()
   }
   def createTopic(req:CreateTopic): Topic ={

@@ -4,9 +4,12 @@ import com.blyxa.stap.models.Topics
 import com.typesafe.config.ConfigRenderOptions
 import org.apache.avro.Schema
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig}
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.fusesource.jansi.Ansi
+import org.python.util.PythonInterpreter
 import pureconfig.ConfigSource
 import scopt.OParser
+
 import java.util.Properties
 import scala.jdk.CollectionConverters._
 
@@ -75,6 +78,39 @@ object Main {
             o.out(s"    [${consumerGroups.map(_.groupId()).mkString(",")}]")
             o.out(topic.configAsAsciiTable().render())
             o.out(topic.partitionsAsAsciiTable().render())
+          })
+        case "genAvro" =>
+          withContext(stapConfig, programArgs, kf=>{
+            val interfaceType:Object = classOf[RecordGenerator]
+            val interpreter = new PythonInterpreter()
+
+            interpreter.exec("import sys")
+            interpreter.exec("""sys.path.append("generator/python/")""")
+            interpreter.exec("from generator import RecordGeneratorImpl")
+            val pyObject = interpreter.get("RecordGeneratorImpl")
+            // https://jython.readthedocs.io/en/latest/JythonAndJavaIntegration/#using-java-within-jython-applications
+            val newObj = pyObject.__call__()
+            val javaInt = newObj.__tojava__(Class.forName(interfaceType.toString.substring(
+              interfaceType.toString.indexOf(" ")+1, interfaceType.toString.length())))
+            val impl = javaInt.asInstanceOf[RecordGenerator]
+            val avroUtil = AvroUtil(programArgs.schema.get)
+            var i = 0
+            val producer = kf.producer()
+            println(s"generating records with recordGenMax:${programArgs.recordGenCount} recordGenIntervalMs:${programArgs.recordGenIntervalMs}")
+            while(i < programArgs.recordGenCount || programArgs.recordGenCount == -1)
+            {
+              val keyRecord = impl.generate()
+              val record = avroUtil.jsonToGeneric(keyRecord.valueJson)
+              val bytes = avroUtil.genericDataToBytes(record)
+              val r = new ProducerRecord[Array[Byte],Array[Byte]](programArgs.topic.get, keyRecord.key.getBytes, bytes)
+              val res = producer.send(r).get()
+              println(s"wrote record to topic:${res.topic()} partition:${res.partition()} offset:${res.offset()} key:${keyRecord.key} record:${keyRecord.valueJson}")
+              i += 1
+              if(programArgs.recordGenIntervalMs>0 && (i < programArgs.recordGenCount || programArgs.recordGenCount == -1)){
+                Thread.sleep(programArgs.recordGenIntervalMs)
+              }
+            }
+
           })
         case _ =>
           println("unsupported command. use --help for more info.")
