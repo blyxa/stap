@@ -4,7 +4,7 @@ is a command line tool for (among other functions) reading/writing data from kaf
 * Avro
 * String
 
-`stap` requires a configuration file (HOCON) named stap.conf in the working directory. In the file you specify the kafka information.
+`stap` requires a configuration file (HOCON) named stap.conf in the working directory. In the file you specify the kafka broker information.
 
 ```
 "kafka" : {
