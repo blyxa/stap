@@ -49,7 +49,7 @@ vi stap.conf
 ```
 
 # Data Generation Feature
-There are times when you need to generate multiple test data into a kafka topic. STAP allows users to generate test data using python. Python is used only for the generation of the test data (as json string). STAP will initialize the kafka producer and call the python script to generate the test data and then write to the topic.
+There are times when you need to generate a continuous stream of test data into a kafka topic. STAP allows users to generate test data using python. Python is used only for the generation of the test data (as json string). STAP will initialize the kafka producer and call the python script to generate the test data and then write to the topic.
 * example.avro.json represents the Avro schema we will use
 * generator/python/generator.py contains code that will be called by STAP to generate the test data (json string)
 * `./stap genAvro -t localhost -n myavrotopic -s example.avro.json` is the command for starting the process
