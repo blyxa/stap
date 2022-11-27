@@ -180,7 +180,7 @@ object ProgramArgs {
             opt[Int]('i',"intervalMs")
               .action((x, c) => c.copy(recordGenIntervalMs = x))
               .text("interval between record generation. default 1000."),
-            opt[Int]('n',"number")
+            opt[Int]('c',"count")
               .action((x, c) => c.copy(recordGenCount = x))
               .text("number of records to generate. -1 forever. default 10.")
           ),

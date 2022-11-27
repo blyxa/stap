@@ -64,7 +64,7 @@ There are times when you need to generate multiple test data into a kafka topic.
 
 # in another terminal, start the genAvro command. 
 # this command will generate 50 records at one record per second
-./stap genAvro -t localhost -n myavrotopic -s example.avro.json -i 1000 -n 50
+./stap genAvro -t localhost -n myavrotopic -s example.avro.json -i 1000 -c 50
 
 # you should see the records being printed in the readAvro terminal
 ```
