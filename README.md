@@ -26,7 +26,7 @@ cd stap
 # build
 ./gradlew build
 
-# add kafka cluster configuration in stap.conf else use the predefined localhost.
+# configure kafka broker endpoints.
 vi stap.conf
 
 # show available commands
